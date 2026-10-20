@@ -72,59 +72,187 @@ task is skipped because it requires 25 minutes, but only
 
 ## 🧪 Testing PawPal+
 
-```bash
-# Run the full test suite:
-pytest
+## 🧪 Testing PawPal+
 
-### Sample Test Output
+PawPal+ uses pytest to verify its core functionality, scheduling algorithms, and edge cases.
+
+### Running the Tests
+
+To run all automated tests:
+
+```bash
+python -m pytest
+```
+
+To run the PawPal+ test file with detailed output:
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+
+To generate a code coverage report:
+
+```bash
+python -m pytest tests/test_pawpal.py -v --cov=pawpal_system --cov-report=term-missing
+```
+
+### Test Coverage
+
+The automated test suite verifies nine important behaviors:
+
+| Test | Description | Result |
+|---|---|---|
+| Task completion | Confirms that tasks can be marked complete | PASSED |
+| Task addition | Verifies that tasks are added to a pet | PASSED |
+| Multi-pet scheduling | Checks scheduling across multiple pets within available time | PASSED |
+| Recurring tasks | Verifies daily and weekly recurrence and prevents duplicate generation | PASSED |
+| Conflict detection | Identifies overlapping tasks | PASSED |
+| Sorting correctness | Verifies chronological task ordering | PASSED |
+| Identical start times | Detects two tasks scheduled at exactly the same time | PASSED |
+| Filtering edge cases | Returns an empty list when no tasks match | PASSED |
+| Zero available time | Returns an empty schedule when the owner has no available time | PASSED |
+
+### Successful Test Output
 
 Command:
+
 ```bash
-python -m pytest tests/test_pawpal.py --cov=pawpal_system --cov-report=term-missing
+python -m pytest tests/test_pawpal.py -v
 ```
 
-Results:
+Output:
+
 ```text
-collected 3 items
+collected 9 items
 
-tests/test_pawpal.py ... [100%]
+tests/test_pawpal.py::test_task_completion PASSED
+tests/test_pawpal.py::test_task_addition PASSED
+tests/test_pawpal.py::test_multi_pet_scheduler PASSED
+tests/test_pawpal.py::test_recurring_tasks PASSED
+tests/test_pawpal.py::test_conflict_detection PASSED
+tests/test_pawpal.py::test_sort_tasks_by_time PASSED
+tests/test_pawpal.py::test_conflict_same_start_time PASSED
+tests/test_pawpal.py::test_filter_no_matching_tasks PASSED
+tests/test_pawpal.py::test_zero_available_time PASSED
 
-Name               Stmts   Miss  Cover   Missing
-------------------------------------------------
-pawpal_system.py      54      2    96%   15, 34
-------------------------------------------------
-TOTAL                 54      2    96%
-
-3 passed in 0.16s
+9 passed in 0.18s
 ```
 
-All three tests passed successfully:
-- Task completion
-- Task addition
-- Multi-pet scheduling
+All nine tests passed successfully.
 
-The tests achieved 96% statement coverage of pawpal_system.py.
+### Code Coverage
 
+The previous Phase 4 test suite achieved 93% statement coverage. Additional tests were added during Phase 5, so the current coverage percentage should be measured again using pytest-cov.
+
+### Confidence Level: ★★★★☆ (4/5)
+
+I am confident that PawPal+ handles its core pet management and scheduling functions correctly. All nine automated tests passed, including tests for sorting, recurrence, overlapping schedules, filtering, and zero available time.
+
+I rated the system 4 out of 5 stars because additional testing is still needed for invalid inputs, tasks crossing midnight, more complex scheduling conflicts, and data persistence.
+
+### Future Improvements
+
+I would improve the test suite by adding:
+
+- Tests for invalid task durations and time formats.
+- Tests for empty pet lists.
+- Tests for tasks spanning midnight.
+- Tests for scheduling across different due dates.
+- Integration tests for the Streamlit interface.
+
+These improvements would help make PawPal+ more reliable as the application grows.
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+## 📐 Smarter Scheduling
 
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+In Phase 4, I improved PawPal+ by implementing task sorting, filtering, recurring tasks, and scheduling conflict detection.
+
+| Feature | Method(s) | Description |
+|---|---|---|
+| Priority sorting | `PawPalSystem.sort_tasks()` | Sorts incomplete tasks by High, Medium, and Low priority. |
+| Time sorting | `PawPalSystem.sort_by_time()` | Sorts tasks by scheduled start time. |
+| Filtering | `PawPalSystem.filter_tasks()` | Filters tasks by pet name or completion status. |
+| Daily scheduling | `PawPalSystem.generate_plan()` | Selects priority-based tasks within the owner's available time. |
+| Conflict detection | `PawPalSystem.find_conflicts()` | Identifies overlapping incomplete tasks on the same date. |
+| Recurring tasks | `Task.mark_complete()` | Creates the next occurrence of a daily or weekly task when completed. |
+
+### Task Sorting
+
+The scheduler uses Python's `sorted()` function to organize tasks by priority or scheduled time.
+
+Example:
+
+```text
+=== Tasks Sorted by Time ===
+08:00 - Max: Breakfast
+12:00 - Max: Medication
+18:00 - Max: Evening walk
+```
+
+### Task Filtering
+
+Users can filter tasks by pet name and completion status.
+
+Example:
+
+```text
+=== Filter Incomplete Tasks ===
+Buddy: Groom
+Luna: Feed
+```
+
+### Recurring Tasks
+
+When a recurring task is marked complete, the system automatically creates the next occurrence.
+
+- Daily tasks repeat after one day.
+- Weekly tasks repeat after seven days.
+- New occurrences are added to the same pet.
+- Completing an already completed task does not generate duplicates.
+
+### Conflict Detection
+
+The scheduler compares task start and end times to identify overlapping tasks on the same date.
+
+Example:
+
+```text
+=== Conflict Detection ===
+Conflict: Buddy's Walk overlaps with Luna's Feed
+```
+
+The system returns a warning without stopping execution.
+
+### Algorithm Tradeoffs
+
+I chose simple algorithms that are easy to understand and maintain.
+
+- Sorting uses Python's built-in `sorted()` function.
+- Filtering uses list comprehensions.
+- Recurring tasks use `datetime.timedelta`.
+- Conflict detection compares task pairs and has O(n²) time complexity.
+
+These algorithms are appropriate for a small pet-care scheduling application. Future improvements could include more efficient conflict detection, due-date-aware scheduling, and support for owner preferences.
 
 ## 📸 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+Follow these steps to try PawPal+:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+Launch the application: Open a terminal in the project folder and run streamlit run app.py.
+
+Add a pet: Enter the pet's name, species, and age in the Streamlit interface.
+
+Create care tasks: Add activities such as walking, feeding, or grooming. Specify the pet, task duration, and priority.
+
+View tasks: Review the care tasks associated with the pets.
+
+Generate a schedule: Click the Generate Schedule button. PawPal+ selects incomplete tasks based on priority and the owner's available time.
+
+Explore smarter scheduling: Run python main.py to see examples of task sorting, filtering, and conflict detection.
+
+Run automated tests: Execute python -m pytest tests/test_pawpal.py -v to verify the backend functionality.
+
+The Streamlit interface provides an interactive way to manage pets and generate schedules, while the command-line demonstration shows the additional Phase 4 scheduling algorithms.
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->

@@ -121,3 +121,108 @@ def test_conflict_detection():
     assert len(conflicts) == 1
     assert "Buddy's Walk" in conflicts[0]
     assert "Luna's Feed" in conflicts[0]
+
+def test_sort_tasks_by_time():
+    owner = Owner("Alex", 90)
+    buddy = Pet("Buddy", "Dog", 3)
+
+    owner.add_pet(buddy)
+
+    system = PawPalSystem(owner)
+
+    system.add_task(Task(
+        "Evening Walk", 30, "Medium", buddy,
+        time="18:00"
+    ))
+
+    system.add_task(Task(
+        "Breakfast", 15, "High", buddy,
+        time="08:00"
+    ))
+
+    system.add_task(Task(
+        "Medication", 10, "High", buddy,
+        time="12:00"
+    ))
+
+    sorted_tasks = system.sort_by_time()
+
+    assert [task.title for task in sorted_tasks] == [
+        "Breakfast",
+        "Medication",
+        "Evening Walk"
+    ]
+
+def test_conflict_same_start_time():
+    owner = Owner("Alex", 60)
+
+    buddy = Pet("Buddy", "Dog", 3)
+    luna = Pet("Luna", "Cat", 2)
+
+    owner.add_pet(buddy)
+    owner.add_pet(luna)
+
+    system = PawPalSystem(owner)
+
+    system.add_task(Task(
+        "Walk", 30, "High", buddy,
+        time="08:00", due_date="2026-10-20"
+    ))
+
+    system.add_task(Task(
+        "Feed", 15, "High", luna,
+        time="08:00", due_date="2026-10-20"
+    ))
+
+    conflicts = system.find_conflicts()
+
+    assert len(conflicts) == 1
+    assert "Buddy's Walk" in conflicts[0]
+    assert "Luna's Feed" in conflicts[0]
+
+def test_filter_no_matching_tasks():
+    owner = Owner("Alex", 60)
+    buddy = Pet("Buddy", "Dog", 3)
+
+    owner.add_pet(buddy)
+
+    system = PawPalSystem(owner)
+
+    system.add_task(Task(
+        "Walk", 30, "High", buddy
+    ))
+
+    system.add_task(Task(
+        "Feed", 15, "Medium", buddy
+    ))
+
+    # Search for a pet that does not exist
+    results = system.filter_tasks(pet_name="Luna")
+
+    assert results == []
+
+    # Search for completed tasks when none are completed
+    completed_tasks = system.filter_tasks(completed=True)
+
+    assert completed_tasks == []
+
+def test_zero_available_time():
+    owner = Owner("Alex", 0)
+    buddy = Pet("Buddy", "Dog", 3)
+
+    owner.add_pet(buddy)
+
+    system = PawPalSystem(owner)
+
+    system.add_task(Task(
+        "Walk", 30, "High", buddy
+    ))
+
+    system.add_task(Task(
+        "Feed", 15, "High", buddy
+    ))
+
+    schedule = system.generate_plan()
+
+    assert schedule == []
+    
