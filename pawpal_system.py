@@ -3,7 +3,10 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 
 
-# Pet class
+# --------------------------------------------------
+# Pet Class
+# --------------------------------------------------
+
 @dataclass
 class Pet:
     name: str
@@ -20,7 +23,10 @@ class Pet:
         self.tasks.append(task)
 
 
-# Task class
+# --------------------------------------------------
+# Task Class
+# --------------------------------------------------
+
 @dataclass
 class Task:
     title: str
@@ -34,10 +40,17 @@ class Task:
 
     def get_details(self):
         """Return a readable description of the task."""
-        return f"{self.title} for {self.pet.name} ({self.duration} minutes)"
+        return (
+            f"{self.title} for {self.pet.name} "
+            f"({self.duration} minutes)"
+        )
 
     def mark_complete(self):
-        """Complete a task and create its next occurrence if recurring."""
+        """
+        Mark a task complete and create the next occurrence
+        when the task repeats daily or weekly.
+        """
+
         if self.completed:
             return None
 
@@ -47,8 +60,10 @@ class Task:
 
         if frequency == "daily":
             days = 1
+
         elif frequency == "weekly":
             days = 7
+
         else:
             return None
 
@@ -71,10 +86,14 @@ class Task:
         )
 
         self.pet.add_task(next_task)
+
         return next_task
 
 
-# Owner class
+# --------------------------------------------------
+# Owner Class
+# --------------------------------------------------
+
 @dataclass
 class Owner:
     name: str
@@ -88,6 +107,7 @@ class Owner:
 
     def get_all_tasks(self):
         """Collect tasks from all pets."""
+
         all_tasks = []
 
         for pet in self.pets:
@@ -95,10 +115,13 @@ class Owner:
 
         return all_tasks
 
-# PawPalSystem class
 
-# PawPalSystem class
+# --------------------------------------------------
+# PawPalSystem Class
+# --------------------------------------------------
+
 class PawPalSystem:
+
     def __init__(self, owner: Owner):
         """Initialize the scheduler with an owner."""
         self.owner = owner
@@ -108,7 +131,8 @@ class PawPalSystem:
         task.pet.add_task(task)
 
     def sort_tasks(self):
-        """Sort incomplete tasks from all pets by priority."""
+        """Sort incomplete tasks by priority."""
+
         priority_order = {
             "High": 1,
             "Medium": 2,
@@ -118,69 +142,106 @@ class PawPalSystem:
         tasks = self.owner.get_all_tasks()
 
         incomplete_tasks = [
-            task for task in tasks
+            task
+            for task in tasks
             if not task.completed
         ]
 
         return sorted(
             incomplete_tasks,
-            key=lambda task: priority_order.get(task.priority, 4)
+            key=lambda task: priority_order.get(
+                task.priority, 4
+            )
         )
-    
+
+    def sort_by_time(self):
+        """Return all tasks sorted by scheduled time."""
+
+        tasks = self.owner.get_all_tasks()
+
+        return sorted(
+            tasks,
+            key=lambda task: task.time
+        )
+
+    def filter_tasks(self, pet_name=None, completed=None):
+        """Filter tasks by pet name and completion status."""
+
+        return [
+            task
+            for task in self.owner.get_all_tasks()
+            if (
+                pet_name is None
+                or task.pet.name.lower() == pet_name.lower()
+            )
+            and (
+                completed is None
+                or task.completed == completed
+            )
+        ]
+
     def find_conflicts(self):
-        """Return warnings for overlapping incomplete tasks."""
+        """Detect overlapping incomplete tasks on the same date."""
+
         tasks = self.owner.get_all_tasks()
         conflicts = []
 
-        active_tasks = [task for task in tasks if not task.completed]
+        active_tasks = [
+            task
+            for task in tasks
+            if not task.completed
+        ]
 
         for i in range(len(active_tasks)):
+
             task1 = active_tasks[i]
 
-            hour1, minute1 = map(int, task1.time.split(":"))
+            hour1, minute1 = map(
+                int,
+                task1.time.split(":")
+            )
+
             start1 = hour1 * 60 + minute1
             end1 = start1 + task1.duration
 
             for j in range(i + 1, len(active_tasks)):
+
                 task2 = active_tasks[j]
 
                 if task1.due_date != task2.due_date:
                     continue
 
-                hour2, minute2 = map(int, task2.time.split(":"))
+                hour2, minute2 = map(
+                    int,
+                    task2.time.split(":")
+                )
+
                 start2 = hour2 * 60 + minute2
                 end2 = start2 + task2.duration
 
                 if start1 < end2 and start2 < end1:
+
                     conflicts.append(
-                        f"Conflict: {task1.pet.name}'s {task1.title} "
-                        f"overlaps with {task2.pet.name}'s {task2.title}"
+                        f"Conflict: {task1.pet.name}'s "
+                        f"{task1.title} overlaps with "
+                        f"{task2.pet.name}'s {task2.title}"
                     )
 
         return conflicts
-    
-    def sort_by_time(self):
-        """Return all pet tasks sorted by scheduled time."""
-        tasks = self.owner.get_all_tasks()
-        return sorted(tasks, key=lambda task: task.time)
-
-    def filter_tasks(self, pet_name=None, completed=None):
-        """Filter tasks by pet name and completion status."""
-        return [
-            task for task in self.owner.get_all_tasks()
-            if (pet_name is None or task.pet.name.lower() == pet_name.lower())
-            and (completed is None or task.completed == completed)
-        ]
 
     def generate_plan(self):
-        """Create a daily schedule within the available time."""
+        """Create a priority-based plan within available time."""
+
         available_time = self.owner.available_minutes
+
         schedule = []
 
         for task in self.sort_tasks():
+
             if task.duration <= available_time:
+
                 schedule.append(task)
+
                 available_time -= task.duration
 
         return schedule
-
